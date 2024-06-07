@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:caption_generator/secrets/app_secrets.dart';
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
@@ -43,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final model = GenerativeModel(
       model: 'gemini-1.5-flash-latest',
-      apiKey: "AIzaSyDDdwSbghq0s25jbMWiC1ei6TDfGTUNUaY",
+      apiKey: AppSecrets.API_KEY,
     );
 
     var prompt =
@@ -84,97 +85,98 @@ class _HomeScreenState extends State<HomeScreen> {
             background(),
             Center(
               child: isFilePicked
-                  ? Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Container(
-                          margin: const EdgeInsets.all(10),
-                          child: FutureBuilder<XFile?>(
-                            future: xFile,
-                            builder: (context, snap) {
-                              if (snap.hasData) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  child: Image.file(
-                                    height: 250,
-                                    width: 250,
-                                    File(snap.data!.path),
-                                    fit: BoxFit.cover,
-                                  ),
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          Container(
+                            margin: const EdgeInsets.all(10),
+                            child: FutureBuilder<XFile?>(
+                              future: xFile,
+                              builder: (context, snap) {
+                                if (snap.hasData) {
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    child: Image.file(
+                                      height: 250,
+                                      width: 250,
+                                      File(snap.data!.path),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  );
+                                }
+                                return const Center(
+                                  child: Text('Invalid Image'),
                                 );
-                              }
-                              return const Center(
-                                child: Text('Invalid Image'),
-                              );
-                            },
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black45,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20)),
-                                fixedSize: const Size(250, 50)),
-                            onPressed: () {
-                              generateCaption();
-                            },
-                            child: isLoading
-                                ? const Center(
-                                    child: CupertinoActivityIndicator(
-                                    color: Colors.white,
-                                    radius: 14,
-                                  ))
-                                : Text('Generate  ✨',
-                                    style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 26,
-                                        color: Colors.white))),
-                        const SizedBox(height: 10),
-                        const Divider(
-                          color: Colors.white,
-                          thickness: 1,
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                            height: 40,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  for (var i = 0; i < captionList.length; i++)
-                                    CaptionStyle(
-                                      caption: captionList[i][0].toString(),
-                                      isSelected: captionList[i][1] == true,
-                                      onTap: () {
-                               
-                               
-                                        print(captionList[i][0].toString());
-                                        setState(() {
-                                          for (var element in captionList) {
-                                            element[1] = false;
-                                          }
-                                          captionList[i][1] = true;
-                                        });
-                                        generateCaption();
-                                      },
-                                    )
-                                ],
-                              ),
-                            )),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            generatedCaptions,
-                            style: GoogleFonts.poppins(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.black45,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20)),
+                                  fixedSize: const Size(250, 50)),
+                              onPressed: () {
+                                generateCaption();
+                              },
+                              child: isLoading
+                                  ? const Center(
+                                      child: CupertinoActivityIndicator(
+                                      color: Colors.white,
+                                      radius: 14,
+                                    ))
+                                  : Text('Generate  ✨',
+                                      style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 26,
+                                          color: Colors.white))),
+                          const SizedBox(height: 10),
+                          const Divider(
+                            color: Colors.white,
+                            thickness: 1,
                           ),
-                        )
-                      ],
+                          const SizedBox(height: 20),
+                          SizedBox(
+                              height: 40,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 12.0),
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: [
+                                    for (var i = 0; i < captionList.length; i++)
+                                      CaptionStyle(
+                                        caption: captionList[i][0].toString(),
+                                        isSelected: captionList[i][1] == true,
+                                        onTap: () {
+                                          print(captionList[i][0].toString());
+                                          setState(() {
+                                            for (var element in captionList) {
+                                              element[1] = false;
+                                            }
+                                            captionList[i][1] = true;
+                                          });
+                                          generateCaption();
+                                        },
+                                      )
+                                  ],
+                                ),
+                              )),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              generatedCaptions,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          )
+                        ],
+                      ),
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
