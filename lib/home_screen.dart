@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:caption_generator/secrets/app_secrets.dart';
@@ -6,6 +7,7 @@ import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<XFile?> xFile;
   bool isFilePicked = false;
   bool isLoading = false;
+  TextEditingController contextController = TextEditingController();
 
   var captionList = [
     ['Witty', true],
@@ -35,6 +38,40 @@ class _HomeScreenState extends State<HomeScreen> {
   var generatedCaptions = '';
   var selectedStyle = '';
 
+  void enterAdditionalContext() {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Additional Context'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      'Provide additional context to the AI model to generate better captions.'),
+                  TextField(
+                    controller: contextController,
+                    decoration:
+                        const InputDecoration(hintText: 'Additional context'),
+                  )
+                ],
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      generateCaption();
+                    },
+                    child: const Text('Generate')),
+                TextButton(
+                    onPressed: () {
+                      contextController.clear();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Close'))
+              ],
+            ));
+  }
+
   void generateCaption() async {
     var selectedStyle =
         captionList.firstWhere((element) => element[1] == true)[0];
@@ -46,13 +83,16 @@ class _HomeScreenState extends State<HomeScreen> {
       model: 'gemini-1.5-flash-latest',
       apiKey: AppSecrets.API_KEY,
     );
-
     var prompt =
         'Generate 5 Instagram captions for this picture. Keep it really short and $selectedStyle.';
+
+    if (contextController.text.isNotEmpty) {
+      prompt += ' ${contextController.text}';
+    }
+
     final content = [
       Content.multi([
         TextPart(prompt),
-        // The only accepted mime types are image/*.
         DataPart(
             'image/jpeg', await xFile.then((value) => value!.readAsBytes())),
       ])
@@ -64,6 +104,12 @@ class _HomeScreenState extends State<HomeScreen> {
           }),
           print(value.text!)
         });
+  }
+
+  @override
+  void dispose() {
+    contextController.dispose();
+    super.dispose();
   }
 
   @override
@@ -211,7 +257,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             ))
                       ],
                     ),
-            )
+            ),
+            Positioned(
+              bottom: 10,
+              right: 10,
+              child: IconButton(
+                  onPressed: enterAdditionalContext,
+                  icon: const Icon(Icons.edit, color: Colors.white)),
+            ),
           ])),
     );
   }
